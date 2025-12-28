@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Reaction Bot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #25D366;
+        }
+
+        .emoji-preview {
+            font-size: 2rem;
+            margin-top: 10px;
+            min-height: 50px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .tokens-section {
+            margin-bottom: 25px;
+        }
+
+        .token-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .token-input-group input {
+            flex: 1;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            width: 100%;
+            justify-content: center;
+            font-size: 1.2rem;
+            padding: 20px;
+        }
+
+        .btn-add {
+            background: #4CAF50;
+        }
+
+        .btn-remove {
+            background: #f44336;
+            padding: 8px 15px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #25D366;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            display: none;
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 5px solid #25D366;
+        }
+
+        .result.success {
+            border-left-color: #25D366;
+        }
+
+        .result.error {
+            border-left-color: #f44336;
+        }
+
+        .result h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .result pre {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+
+        .emoji-suggestions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .emoji-btn {
+            font-size: 1.5rem;
+            padding: 10px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .emoji-btn:hover {
+            transform: scale(1.1);
+            background: #e0e0e0;
+        }
+
+        .instructions {
+            background: #e8f5e9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .instructions h3 {
+            color: #2e7d32;
+            margin-bottom: 10px;
+        }
+
+        .instructions ol {
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 20px;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 WhatsApp Reaction Bot</h1>
+            <p>Send reactions to WhatsApp posts automatically</p>
+        </div>
+
+        <div class="content">
+            <div class="instructions">
+                <h3>📋 How to Use:</h3>
+                <ol>
+                    <li>Add your API tokens in the tokens section</li>
+                    <li>Enter the WhatsApp post URL</li>
+                    <li>Select or type emojis to react with</li>
+                    <li>Click "Send Reaction" button</li>
+                    <li>Wait for the response and check remaining coins</li>
+                </ol>
+            </div>
+
+            <div class="tokens-section">
+                <label for="tokens">🔑 API Tokens (One per line):</label>
+                <textarea 
+                    id="tokens" 
+                    rows="4" 
+                    placeholder="Enter your API tokens here, one per line"
+                ></textarea>
+                <small>You can use multiple tokens for better reliability</small>
+            </div>
+
+            <div class="form-group">
+                <label for="postUrl">🔗 WhatsApp Post URL:</label>
+                <input 
+                    type="url" 
+                    id="postUrl" 
+                    placeholder="https://whatsapp.com/channel/..."
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="emojis">😃 Emojis to React:</label>
+                <input 
+                    type="text" 
+                    id="emojis" 
+                    placeholder="👍❤️😂😮😢😡🎉"
+                    required
+                >
+                <div class="emoji-suggestions">
+                    <button class="emoji-btn" onclick="addEmoji('👍')">👍</button>
+                    <button class="emoji-btn" onclick="addEmoji('❤️')">❤️</button>
+                    <button class="emoji-btn" onclick="addEmoji('😂')">😂</button>
+                    <button class="emoji-btn" onclick="addEmoji('😮')">😮</button>
+                    <button class="emoji-btn" onclick="addEmoji('😢')">😢</button>
+                    <button class="emoji-btn" onclick="addEmoji('😡')">😡</button>
+                    <button class="emoji-btn" onclick="addEmoji('🎉')">🎉</button>
+                    <button class="emoji-btn" onclick="addEmoji('👏')">👏</button>
+                </div>
+                <div class="emoji-preview" id="emojiPreview"></div>
+            </div>
+
+            <div class="form-group">
+                <button class="btn btn-primary" onclick="sendReaction()">
+                    📤 Send Reaction
+                </button>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Sending reaction to WhatsApp...</p>
+            </div>
+
+            <div class="result" id="result"></div>
+        </div>
+
+        <footer>
+            <p>WhatsApp Reaction Bot &copy; 2024 | Using movanest.zone.id API</p>
+        </footer>
+    </div>
+
+    <script>
+        // Update emoji preview
+        const emojisInput = document.getElementById('emojis');
+        const emojiPreview = document.getElementById('emojiPreview');
+
+        emojisInput.addEventListener('input', function() {
+            emojiPreview.textContent = this.value;
+        });
+
+        // Add emoji to input
+        function addEmoji(emoji) {
+            emojisInput.value += emoji;
+            emojiPreview.textContent = emojisInput.value;
+            emojisInput.focus();
+        }
+
+        // Send reaction function
+        async function sendReaction() {
+            const postUrl = document.getElementById('postUrl').value.trim();
+            const emojis = document.getElementById('emojis').value.trim();
+            const tokensText = document.getElementById('tokens').value.trim();
+            
+            // Validation
+            if (!postUrl || !emojis || !tokensText) {
+                showResult('error', 'Please fill in all fields');
+                return;
+            }
+
+            if (!postUrl.includes('whatsapp.com')) {
+                showResult('error', 'Please enter a valid WhatsApp URL');
+                return;
+            }
+
+            // Parse tokens
+            const tokens = tokensText.split('\n')
+                .map(token => token.trim())
+                .filter(token => token.length > 0);
+
+            if (tokens.length === 0) {
+                showResult('error', 'Please add at least one API token');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+
+            try {
+                // Here we would make the actual API call
+                // For demo purposes, we'll simulate the API response
+                const result = await simulateApiCall(postUrl, emojis, tokens);
+                
+                if (result.success) {
+                    showResult('success', 
+                        `✅ Success!\n\n` +
+                        `📌 Post URL: ${postUrl}\n` +
+                        `😃 Emojis: ${emojis}\n` +
+                        `💰 Remaining Coins: ${result.data.remainingCoins || 'N/A'}\n` +
+                        `📊 Status: ${result.data.status || 'Delivered'}`
+                    );
+                } else {
+                    showResult('error', 
+                        `❌ Failed!\n\n` +
+                        `📌 Post URL: ${postUrl}\n` +
+                        `😃 Emojis: ${emojis}\n` +
+                        `🚫 Error: ${result.error || 'Unknown error'}\n` +
+                        `⚠️ Status Code: ${result.status || 'N/A'}`
+                    );
+                }
+            } catch (error) {
+                showResult('error', `Network error: ${error.message}`);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        // Simulate API call (replace with actual API call)
+        async function simulateApiCall(postUrl, emojis, tokens) {
+            // This simulates the delay and response
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Random success/failure for demo
+            const isSuccess = Math.random() > 0.2;
+            
+            if (isSuccess) {
+                return {
+                    success: true,
+                    data: {
+                        postUrl: postUrl,
+                        emojis: emojis,
+                        remainingCoins: Math.floor(Math.random() * 1000),
+                        status: "Reaction sent successfully"
+                    }
+                };
+            } else {
+                return {
+                    success: false,
+                    status: 402,
+                    error: "Rate limit exceeded. Please try again later."
+                };
+            }
+        }
+
+        // Actual API call function (uncomment and use when you have the real API)
+        /*
+        async function actualApiCall(postUrl, emojis, tokens) {
+            const DELAY_ON_LIMIT = 5000;
+            
+            for (const token of tokens) {
+                try {
+                    const response = await fetch(
+                        `https://movanest.zone.id/user-coin?` + 
+                        `user_api_key=${encodeURIComponent(token)}&` +
+                        `postUrl=${encodeURIComponent(postUrl)}&` +
+                        `emojis=${encodeURIComponent(emojis)}`,
+                        {
+                            method: 'GET',
+                            timeout: 500000
+                        }
+                    );
+
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        return {
+                            success: true,
+                            data: data
+                        };
+                    }
+
+                    if (response.status === 402 || 
+                        (data.message && data.message.toLowerCase().includes("limit"))) {
+                        await new Promise(r => setTimeout(r, DELAY_ON_LIMIT));
+                        continue;
+                    }
+
+                    if (response.status === 401) {
+                        continue;
+                    }
+
+                    return {
+                        success: false,
+                        status: response.status,
+                        error: data.message || "Unknown error"
+                    };
+
+                } catch (error) {
+                    console.error("API Error:", error);
+                    // Continue to next token on network error
+                }
+            }
+
+            return {
+                success: false,
+                status: 402,
+                error: "All tokens are limited or exhausted"
+            };
+        }
+        */
+
+        // Show result function
+        function showResult(type, message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `result ${type}`;
+            resultDiv.innerHTML = `
+                <h3>${type === 'success' ? '✅ Success' : '❌ Error'}</h3>
+                <pre>${message}</pre>
+            `;
+            resultDiv.style.display = 'block';
+        }
+
+        // Load example data for demo
+        window.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('tokens').value = 
+                'YOUR_API_KEY_1\n' +
+                'YOUR_API_KEY_2\n' +
+                'YOUR_API_KEY_3';
+            
+            document.getElementById('postUrl').value = 
+                'https://whatsapp.com/channel/your-channel-id';
+            
+            document.getElementById('emojis').value = '👍❤️🎉';
+            emojiPreview.textContent = '👍❤️🎉';
+        });
+    </script>
+</body>
+</html>
